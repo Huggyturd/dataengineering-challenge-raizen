@@ -8,19 +8,14 @@ Para realizar esse desafio comecei com as seguintes perguntas:
 
 ## PASSOS INICIAIS
 
-Entender o problema.
-
-Entender o que o recrutador quer com o teste.
-
-Entender o dado
-
-Entender como extrair esse dado
-
-Entender como processar esse dado
-
-Entender como carregar esse dado em determinado local
-
-Extrair e transformar em dataframe os dados do segundo sheet para derivativos do óleo e dados do terceiro sheet para etanol.
+ - Entender o problema.
+ - Entender o que o recrutador quer com o teste.
+ - Entender o dado
+ - Entender como extrair esse dado
+ - Entender como processar esse dado
+ - Entender como carregar esse dado em determinado local
+ - Extrair e transformar em dataframe os dados do segundo sheet para   
+   derivativos do óleo e dados do terceiro sheet para etanol.
 
 ## FERRAMENTAS
 
