@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import datetime
 from sys import api_version
 from airflow import DAG
@@ -8,6 +10,7 @@ from docker.types import Mount
 from openpyxl import load_workbook
 import pandas as pd
 import requests
+import os
 
 # ----------------------------------------------------------------------- #
 
@@ -133,35 +136,42 @@ def check_source_with_output(source_xlsx,output_parquet,collumn_name_source,coll
 def get_xls_from_github():
     print("DEBUG: Fazendo download do xls")
     file_url='https://github.com/raizen-analytics/data-engineering-test/raw/master/assets/vendas-combustiveis-m3.xls'
-    file_name='/tmp/dados_brutos.xls'
+    file_name='/opt/airflow/temporary/dados_brutos.xls'
     request = requests.get(file_url, allow_redirects=True)
     open(file_name, 'wb').write(request.content)
 
 def create_oil_derivate_xlsx_file():
-    print("DEBUG: Criando o arquivo /tmp/derivados_oleo.xlsx")
-    extract_xlsx_sheet('/tmp/dados_brutos.xlsx','DPCache_m3','/tmp/derivados_oleo.xlsx')
+    print("DEBUG: Criando o arquivo /opt/airflow/temporaryderivados_oleo.xlsx")
+    extract_xlsx_sheet('/opt/airflow/temporary/dados_brutos.xlsx','DPCache_m3','/opt/airflow/temporary/derivados_oleo.xlsx')
 
 def create_diesel_xlsx_file():
-    print("DEBUG: Criando o arquivo /tmp/diesel.xlsx")
-    extract_xlsx_sheet('/tmp/dados_brutos.xlsx','DPCache_m3_2','/tmp/diesel.xlsx')
+    print("DEBUG: Criando o arquivo /opt/airflow/temporary/diesel.xlsx")
+    extract_xlsx_sheet('/opt/airflow/temporary/dados_brutos.xlsx','DPCache_m3_2','/opt/airflow/temporary/diesel.xlsx')
 
 def process_and_create_parquet_oil_derivate():
     print("DEBUG: Carregando dados do xlsx derivados_oleo.xlsx no Pandas Dataframe")
-    df = process_xlsx_sheet_data('/tmp/derivados_oleo.xlsx')
+    df = process_xlsx_sheet_data('/opt/airflow/temporary/derivados_oleo.xlsx')
     print("DEBUG: Salvando dados como parquet")
     df.to_parquet('/storage/derivados_oleo.parquet', compression='snappy', partition_cols=['uf','product'])
 
 def process_and_create_parquet_diesel_derivate():
     print("DEBUG: Carregando dados do xlsx diesel.xlsx no Pandas Dataframe")
-    df = process_xlsx_sheet_data('/tmp/diesel.xlsx')
+    df = process_xlsx_sheet_data('/opt/airflow/temporary/diesel.xlsx')
     print("DEBUG: Salvando dados como parquet")
     df.to_parquet('/storage/diesel.parquet', compression='snappy', partition_cols=['uf','product'])
 
 def check_diesel_product_collumn():
-    check_source_with_output('/tmp/diesel.xlsx','/storage/diesel.parquet','COMBUSTÍVEL','product')
+    check_source_with_output('/opt/airflow/temporary/diesel.xlsx','/storage/diesel.parquet','COMBUSTÍVEL','product')
 
 def check_oil_derivate_product_collumn():
-    check_source_with_output('/tmp/diesel.xlsx','/storage/diesel.parquet','COMBUSTÍVEL','product')
+    check_source_with_output('/opt/airflow/temporary/diesel.xlsx','/storage/diesel.parquet','COMBUSTÍVEL','product')
+
+def remove_temporary_files_dag():
+    os.remove('/opt/airflow/temporary/dados_brutos.xls')
+    os.remove('/opt/airflow/temporary/dados_brutos.xlsx')
+    os.remove('/opt/airflow/temporary/diesel.xlsx')
+    os.remove('/opt/airflow/temporary/derivados_oleo.xlsx')
+
 # ----------------------------------------------------------------------- #
 
 default_args = {
@@ -180,6 +190,7 @@ with DAG(
     description='Realiza processo ETL no arquivo xls do Desafio Raízen',
     schedule_interval=datetime.timedelta(days=1),
     start_date=days_ago(2),
+    max_active_runs=1,
     tags=['xls','raizen','challenge','etl'],
 ) as dag:
 
@@ -196,7 +207,7 @@ with DAG(
         image='ipunktbs/docker-libreoffice-headless:latest',
         api_version='auto',
         auto_remove=True,
-        command='/usr/bin/libreoffice --nologo --norestore --invisible --nolockcheck --nodefault --headless --convert-to xlsx "{0}" && pkill libreoffice'.format(file_location),
+        command='libreoffice --invisible --headless --convert-to xlsx --outdir /tmp "{0}"'.format(file_location),
         docker_url="unix:///var/run/docker.sock",
         network_mode="bridge",
         mount_tmp_dir=False,
@@ -223,14 +234,19 @@ with DAG(
         python_callable=process_and_create_parquet_diesel_derivate
     )
 
-    check_diesel_product = python_task = PythonOperator(
+    check_diesel_product = PythonOperator(
         task_id="check_diesel_product",
         python_callable=check_diesel_product_collumn
     )
 
-    check_oil_derivate_product = python_task = PythonOperator(
+    check_oil_derivate_product = PythonOperator(
         task_id="check_oil_derivate_product",
         python_callable=check_oil_derivate_product_collumn
+    )
+
+    remove_temporary_files = PythonOperator(
+        task_id="remove_temporary_files",
+        python_callable=remove_temporary_files_dag
     )
 
     get_xls_from_source_location >> convert_xls_to_xlsx 
@@ -240,3 +256,5 @@ with DAG(
     create_diesel_derivate_xlsx >> process_and_store_parquet_diesel
     process_and_store_parquet_oil_derivate >> check_oil_derivate_product
     process_and_store_parquet_diesel >> check_diesel_product
+    check_diesel_product >> remove_temporary_files
+    check_oil_derivate_product >> remove_temporary_files
