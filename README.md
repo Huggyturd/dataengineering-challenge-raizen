@@ -55,6 +55,8 @@ Após rodar o comando você pode acessar o Airflow no endereço localhost:8080 c
 
 Não se esqueça de setar a váriável $DATALAKE_PATH para o local onde será armazenado os arquivos na estrutura de folder : raw_zone, stage_zone, refined_zone ,de setar as permissões para essas pastas no linux e criar os volumes relacionados.
 
+Para que a solução possa rodar sem problemas é preciso que o container do Airflow tenha acesso ao /var/run/docker.sock para poder criar o container do libreoffice.
+
 ## SOLUÇÃO FINAL
 Dag containerizada com suporte a execução em orquestradores com Docker, utilizando requests para fazer o download do arquivo, libreoffice containerizado para converter xls para xlsx mantendo a estrutura do arquivo, openpyxl para ler os dados do pivot cache, pandas para processar os dados e gerar o parquet final. Tudo fica armazenado numa estrutura de datalake convencional.
 
