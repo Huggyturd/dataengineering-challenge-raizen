@@ -1,5 +1,8 @@
 /logs 
-/storage
+/refined_zone
 /plugins
 /.vscode
 .env
+/raw_zone
+/stage_zone
+/refined_zone

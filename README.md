@@ -40,22 +40,21 @@ Após vários testes com bibliotecas sem sucesso, decidir usar o DockerOperator 
 
 docker run --rm -it -v $(pwd):/tmp --name libreoffice-headless ipunktbs/docker-libreoffice-headless:latest --convert-to xlsx "vendas-combustiveis-m3.xls"
 
-  
-
 Através do arquivo de ouput no formato xlsx é possível pegar os dados em cache através da biblioteca openpyxl, com isso o script inicial foi terminado.
 
 Após isso adaptei o script para rodar como uma pipeline airflow com os métodos e processos do airflow.
 
 Depois eu transformei tudo isso em container criando um Dockerfile e criei um docker-compose.yaml para subir um ambiente de teste.
 
-  
-
  - 
 
 ## Comandos:
 ./run.sh 
-ou 
-docker build . -f Dockerfile --tag airflow-raizen-challenge:0.0.1 && docker-compose up -d
+
+Não se esqueça de setar a váriável $DATALAKE_PATH para o local onde será armazenado os arquivos na estrutura de folder : raw_zone, stage_zone, refined_zone ,de setar as permissões para essas pastas no linux e criar os volumes relacionados.
+
+## SOLUÇÃO FINAL
+Dag containerizada com suporte a execução em orquestradores com Docker, utilizando requests para fazer o download do arquivo, libreoffice containerizado para converter xls para xlsx mantendo a estrutura do arquivo, openpyxl para ler os dados do pivot cache, pandas para processar os dados e gerar o parquet final. Tudo fica armazenado numa estrutura de datalake convencional.
 
 ## PESQUISAS REALIZADAS (ALGUMAS DELAS)
 
