@@ -51,6 +51,8 @@ Depois eu transformei tudo isso em container criando um Dockerfile e criei um do
 ## Comandos:
 ./run.sh 
 
+Após rodar o comando você pode acessar o Airflow no endereço localhost:8080 com o usuário airflow senha airflow.
+
 Não se esqueça de setar a váriável $DATALAKE_PATH para o local onde será armazenado os arquivos na estrutura de folder : raw_zone, stage_zone, refined_zone ,de setar as permissões para essas pastas no linux e criar os volumes relacionados.
 
 ## SOLUÇÃO FINAL
