@@ -60,6 +60,9 @@ Para que a solução possa rodar sem problemas é preciso que o container do Air
 ## SOLUÇÃO FINAL
 Dag containerizada com suporte a execução em orquestradores com Docker, utilizando requests para fazer o download do arquivo, libreoffice containerizado para converter xls para xlsx mantendo a estrutura do arquivo, openpyxl para ler os dados do pivot cache, pandas para processar os dados e gerar o parquet final. Tudo fica armazenado numa estrutura de datalake convencional.
 
+## POSSÍVEIS MELHORIAS
+Desacoplar as task e funções auxiliares da dag principal
+
 ## PESQUISAS REALIZADAS (ALGUMAS DELAS)
 
 Pesquisa no Google: read xlsx python
